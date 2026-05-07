@@ -64,6 +64,17 @@
       background-size: cover;
       background-position: center;
       z-index: -2;
+      opacity: 0;
+      transform: scale(1.06);
+      transition:
+        opacity 1.8s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 2.8s cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: opacity, transform;
+    }
+
+    .hero.is-loaded .hero-bg {
+      opacity: 1;
+      transform: scale(1);
     }
 
     .hero-bg::after {
@@ -88,12 +99,26 @@
     .hero-title {
       font-family: 'Inter', sans-serif;
       font-weight: 800;
-      font-size: clamp(2.75rem, 0.5rem + 7vw, 8.625rem);
+      font-size: clamp(1.9rem, 1rem + 6vw, 8.625rem);
       line-height: 1.05;
       letter-spacing: -0.015em;
       color: #9c9ca6;
       max-width: 18ch;
+      width: 100%;
       text-shadow: 0 2px 24px rgba(0,0,0,0.55);
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      hyphens: auto;
+      opacity: 0;
+      transform: translateY(14px);
+      transition:
+        opacity 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.5s,
+        transform 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.5s;
+    }
+
+    .hero.is-loaded .hero-title {
+      opacity: 1;
+      transform: translateY(0);
     }
 
     .hero-scroll {
@@ -110,6 +135,32 @@
       align-items: center;
       gap: 0.5rem;
       text-decoration: none;
+      opacity: 0;
+      transition: opacity 1s ease 1.2s;
+    }
+
+    .hero.is-loaded .hero-scroll { opacity: 1; }
+
+    .hero-logo {
+      transition: opacity 1.2s ease 0.2s;
+    }
+    .hero:not(.is-loaded) .hero-logo { opacity: 0; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .hero-bg,
+      .hero.is-loaded .hero-bg,
+      .hero-title,
+      .hero.is-loaded .hero-title,
+      .hero-scroll,
+      .hero.is-loaded .hero-scroll,
+      .hero-logo,
+      .hero:not(.is-loaded) .hero-logo {
+        opacity: 1;
+        transform: none;
+        transition: opacity 0.3s ease;
+      }
+      .hero.is-loaded .hero-scroll { transform: translateX(-50%); }
+      .hero-scroll { transform: translateX(-50%); }
     }
 
     .hero-scroll::after {
@@ -406,10 +457,43 @@
 
     /* ── Responsive ── */
     @media (max-width: 720px) {
-      .hero { padding: 2rem 1.25rem 5rem; }
-      .hero-logo { width: min(175px, 44vw); }
+      .hero { padding: 5.5rem 1.25rem 5rem; }
+      .hero-logo { width: min(150px, 38vw); }
+      .hero-title { max-width: 16ch; }
       section { padding: 4.5rem 1.25rem; }
       footer { padding: 1.5rem 1.25rem; flex-direction: column; text-align: center; }
+    }
+
+    @media (max-width: 480px) {
+      .hero { padding: 5rem 1rem 4.5rem; }
+      .hero-logo { width: min(130px, 36vw); top: 0.85rem; left: 1rem; }
+      .hero-title { max-width: 14ch; letter-spacing: -0.01em; }
+      .hero-scroll { font-size: 0.75rem; bottom: 1.25rem; }
+    }
+
+    /* Landscape phones / short viewports */
+    @media (max-height: 520px) and (orientation: landscape) {
+      .hero {
+        min-height: 100vh;
+        padding: 1rem 2rem 3rem;
+        justify-content: center;
+      }
+      .hero-logo {
+        width: clamp(100px, 13vw, 130px);
+        top: 0.6rem;
+        left: 0.9rem;
+      }
+      .hero-title {
+        font-size: clamp(1.4rem, 4vw, 2.6rem);
+        max-width: 28ch;
+        line-height: 1.1;
+      }
+      .hero-scroll {
+        bottom: 0.6rem;
+        font-size: 0.7rem;
+        gap: 0.3rem;
+      }
+      .hero-scroll::after { height: 20px; }
     }
   </style>
 </head>
@@ -476,25 +560,25 @@
 
         <article class="game-card reveal">
           <div class="game-thumb">
-            <span class="badge">Coming Soon</span>
+            <span class="badge">2027</span>
             <span class="thumb-label">Game One</span>
           </div>
           <div class="game-body">
             <p class="game-meta">In Development</p>
             <h3 class="game-title">Project One</h3>
-            <p class="game-desc">Details to come. A new adventure is brewing — stay tuned for the reveal.</p>
+            <p class="game-desc">Our first quest is underway. A farm. A night that won't end. Something outside wants in.</p>
           </div>
         </article>
 
         <article class="game-card reveal" style="transition-delay: 0.1s;">
           <div class="game-thumb">
-            <span class="badge">Coming Soon</span>
+            <span class="badge">2028</span>
             <span class="thumb-label">Game Two</span>
           </div>
           <div class="game-body">
-            <p class="game-meta">In Development</p>
+            <p class="game-meta">In Early Concept</p>
             <h3 class="game-title">Project Two</h3>
-            <p class="game-desc">Details to come. A second quest is taking shape alongside the first.</p>
+            <p class="game-desc">Eight million people. One impossible winter. How far would you go to see morning?</p>
           </div>
         </article>
 
@@ -538,6 +622,24 @@
       });
     }, { threshold: 0.15 });
     document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+    // Cinematic hero reveal: wait for the bg image, then trigger fade-in
+    (function () {
+      const hero = document.querySelector('.hero');
+      if (!hero) return;
+      const reveal = () => {
+        if (hero.classList.contains('is-loaded')) return;
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => hero.classList.add('is-loaded'));
+        });
+      };
+      const img = new Image();
+      img.addEventListener('load', reveal, { once: true });
+      img.addEventListener('error', reveal, { once: true });
+      img.src = 'background_crop.png';
+      // Safety fallback if the image stalls
+      setTimeout(reveal, 4000);
+    })();
   </script>
 
 </body>
